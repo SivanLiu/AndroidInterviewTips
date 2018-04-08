@@ -1,2 +1,4 @@
 # Interview knowledge about Android、Java and... 
-Welcome to contribute your excellent code and erudite.
+Welcome to contribute your  outstanding code.
+
+

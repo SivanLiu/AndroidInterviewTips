@@ -1,15 +1,3 @@
----
-
-title: Android/Java 面试锦囊
-
-date:  2018-3-23 22:42:21
-
-tags:  Android/Java
-
-top: 30
-
----
-
 # Android、Java 面试集锦
 
 ## 一、Android 面试
@@ -718,7 +706,6 @@ public class ThreadPoolTest {
 ## 三、算法
 ### 1. 电梯运行的算法分析；
 ### 2. 冒泡排序；
-### 3. 
 
 
 
