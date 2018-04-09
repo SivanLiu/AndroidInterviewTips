@@ -1,4 +1,3 @@
 # Interview knowledge about Android、Java and... 
-Welcome to contribute your  outstanding code.
 
-
+Welcome to contribute your outstanding code.Thanks for your advice!
