@@ -10,7 +10,89 @@ Intent（包括Bundle一共）大小限制为不到 1MB(实测某些机型上 50
 * 写入临时文件或者数据库，通过 FileProvider 将该文件或者数据库通过 Uri 发送至目标。一般适用于不同进程，比如分离进程的 UI 和后台服务，或不同的 App 之间。之所以采用 FileProvider 是因为 7.0 以后，对分享本 App 文件存在着严格的权限检查。
 * 通过设置静态类中的静态变量进行数据交换。一般适用于同一进程内，这样本质上数据在内存中只存在一份，通过静态类进行传递。需要注意的是进行数据校对，以防多线程Data Racer出现导致的数据显示混乱。
 
-### 2. 自定义 View 流程，主要的方法及各自作用；如何防止过度绘制；对View中的onMesurse方法的详细介绍和使用；
+### 2. 自定义 View 流程，主要的方法及各自作用；如何防止过度绘制；对 View 中的 onMesurse 方法的详细介绍和使用
+屏幕坐标图解：
+
+![坐标](custom_view/coordinate.png)
+
+#### 2.1 View 的绘制流程:
+整个 View 树的绘制流程在 ViewRoot 类的 performTraversals() 函数展开，绘制函数的调用  
+
+![](custom_view/view_draw.jpg)
+
+View 主要包括有三个过程:  
+![](custom_view/view.png)
+
+##### 1) Measure：测量 View 的大小，measure 方法是 final 的，无法重写，measure 过程
+View 绘制从 ViewRoot 的 performTraversals() 方法中开始。首先调用的是 performMeasure() 方法，它会调用 View 的 measure 方法进行测量，
+而 DecorView (继承 FrameLayout)的父类是 ViewGroup，ViewGroup 又是继承于 View 的，具体的测量流程如图所示；
+
+![](custom_view/measure.png)
+
+View 绘制主要分为两种情况，View 和 ViewGroup：
+
+* View 通过 measure() 方法完成测量过程，获取View最终的大小是在 onMeasure 方法中，如果要想自定义 View，可以复写该方法
+* ViewGroup 会循环遍历子 View，所有的子 View 测量完成才算结束；ViewGroup 中没有具体 onMeasure 方法，因为不同的 ViewGroup 子类有不同的布局特性，没有统一的 onMeasure 进行测量
+不过它提供了 measureChildren 和 measureChildWithMargins 方法来测量子视图的大小。DecorView 继承的 FrameLayout，复写了 onMeasure 方法，通过 measureChildWithMargins 方法测量所有子视图。
+从View和ViewGroup视图测量的流程看出，有几个核心方法:
+
+* mearsure: 定义在 View 中，为 final 类型，不可被复写，但 measure 调用链最终会回调 View/ViewGroup 对象的 onMeasure() 方法，因此自定义视图时，只需要复写 onMeasure() 方法即可。
+* onMeasure: 自定义视图中需要实现的方法，该方法的参数是父视图对子视图的 width 和 height 的测量要求。根据 widthMeasureSpec 和 heightMeasureSpec 计算视图的 width 和 height，不同的模式处理方式不同。
+* setMeasuredDimension: 测量阶段终极方法，在 onMeasure(int widthMeasureSpec, int heightMeasureSpec) 方法中被调用，将计算得到的尺寸，传递给该方法，测量阶段即结束。
+
+##### 2) Layout：对 View 进行布局，确定 View 的位置
+layout 的作用是 ViewGroup 用来确定子视图的位置，当 ViewGroup 的位置被确定后，它会在 onLayout 中遍历所有的子视图并调用其 layout 方法，在 layout 方法中，onLayout 方法又会被调用。
+![](custom_view/layout.png)
+
+* setFrame 方法确定 View 的四个顶点位置，即确定了 View 在父容器中的位置;
+* View 和 ViewGroup 均没有真正实现 onLayout 方法;
+
+
+3) Draw：对 View 进行绘制，显示内容，根据官方文档，其步骤如下：
+
+* Draw the background
+* If necessary, save the canvas’ layers to prepare for fading
+* Draw view’s content
+* Draw children
+* If necessary, draw the fading edges and restore layers
+* Draw decorations (scrollbars for instance)
+
+![](custom_view/draw.png)
+
+ViewGroup 的 dispatchDraw 方法会遍历所有子 View 的 draw 方法。
+
+#### 2.2 自定义 View 主要分为三类:
+
+* 自绘控件，继承View，通过onDraw方法绘制。
+* 组合控件，使用系统已有的控件，把进行布局和绘制。
+* 继承控件，继承现有的控件，去实现一些新的功能。
+
+
+#### 2.3 过度绘制：
+#### 1）什么是过度绘制（OverDraw）
+在多层次重叠的 UI 结构里面，如果不可见的 UI 也在做绘制的操作，会导致某些像素区域被绘制了多次。这样就会浪费大量的 CP U以及 GPU 资源。过度绘制最直观的影响就是会导致APP卡顿。还好系统有提供 GPU 过度绘制调试工具会在屏幕上用不同的颜色，来表明一个像素点位被重复绘制的次数。
+
+#### 2）屏幕上不同的颜色代表着什么？
+
+* 原色 – 没有被过度绘制 – 这部分的像素点只在屏幕上绘制了一次
+* 蓝色 – 1 次过度绘制– 这部分的像素点只在屏幕上绘制了两次
+* 绿色 – 2 次过度绘制 – 这部分的像素点只在屏幕上绘制了三次
+* 粉色 – 3 次过度绘制 – 这部分的像素点只在屏幕上绘制了四次
+* 红色 – 4 次过度绘制 – 这部分的像素点只在屏幕上绘制了五次
+
+#### 3）怎么解决应用过度绘制？
+
+控制界面最多被过度绘制 2 次（不出现粉色和红色）
+
+* 移除默认的 Window 背景： 一般应用默认继承的主题都会有一个默认的 windowBackground ，比如默认的 Light 主题，但是一般界面都会自己设置界面的背景颜色或者列表页则由 item 的背景来决定，所以默认的 Window 背景基本用不上，如果不移除就会导致所有界面都多 1 次绘制
+* 移除不必要的背景：ViewPager 加多个 Fragment 组成的首页界面，如果你的每个 Fragment 都设置有背景色的话， 你就可以不用给 Activity 的根布局设置背景，如果你还给 ViewPager 还设置了背景，那个这个背景是没必要的，同样可以移除。
+* 合理且高效的布局：使用 RecyclerView 的 addItemDecoration(ItemDecoration decor) 方法添加分割线
+* 自定义控件使用 clipRect() 和 quickReject() 优化：当某些控件不可见时，如果还继续绘制更新该控件，就会导致过度绘制。但是通过 Canvas clipRect() 方法可以设置需要绘制的区域，当某个控件或者 View 的部分区域不可见时，就可以减少过度绘制
+* 尽量多使用 RelativeLayout 和 LinearLayout, 不要使用绝对布局 AbsoluteLayout
+* 在布局层次一样的情况下， 建议使用 LinearLayout 代替 RelativeLayout, 因为 LinearLayout 性能要稍高一点，将可复用的组件抽取出来并通过include标签使用
+* 使用 ViewStub 标签来加载一些不常用的布局；动态地 inflation view 性能要比 SetVisiblity 性能要好.当然用 VIewStub 是最好的选择
+* 使用 merge 标签减少布局的嵌套层次
+* 使得Layout宽而浅，而不是窄而深（在Hierarchy Viewer的Tree视图里面体现）
 
 ### 3. 事件分发及举例说明；
 ### 4. LruCache和DisLruCache的原理；；
