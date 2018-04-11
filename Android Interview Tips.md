@@ -96,6 +96,7 @@ ViewGroup 的 dispatchDraw 方法会遍历所有子 View 的 draw 方法。
 
 参考：
 https://blog.csdn.net/carson_ho/article/details/56009827
+
 ### 3. 事件分发及举例说明
 
 #### 3.1 事件分发的基础知识：
@@ -170,28 +171,46 @@ View 事件分发机制从 dispatchTouchEvent() 开始
 
 参考：https://blog.csdn.net/carson_ho/article/details/54136311
 
-### 4. LruCache和DisLruCache的原理；；
+### 4. LruCache和DisLruCache的原理；
+
 ### 5. 谈谈内存优化；
+
 ### 6. 安卓中方法数不能超过 64k 的原因，及如何处理；
+
 ### 7. 如何实现圆形 ImageView；
+
 ### 8. 说说动态代理的作用；
+
 ### 9. 谈谈注解；
+
 ### 10. 如何自己实现RecyclerView的侧滑删除；
+
 ### 11. TabLayout中如何让当前标签永远位于屏幕中间；
+
 ### 12. Activity跳转时的生命周期问题；
+
 ### 13. Retrofit和EventBus的源码分析；
+
 ### 14. 对 js 互调如何使用，做过什么优化；
+
 ### 15. 遇到过哪些关于 Fragment 的问题；
 
 ### 16. 图片的处理、缓存和优化；
+
 ### 17. Android 实现异步的几种方式；
+
 ### 18. 如何对 Android 应用进行性能分析；
+
 ### 19. MVP的优点与确点；
-### 20. 64k出现的原因及如何解决
-### 21. 对 ART 的认识；
-### 22. 动态代理的作用；
-### 23. TextView调用setText方法的内部执行流程；
-### 24. ClassLoader的双亲委派；ClassLoader
+
+### 20. 对 ART 的认识；
+
+### 21. 动态代理的作用；
+
+### 22. TextView调用setText方法的内部执行流程；
+
+### 23. ClassLoader的双亲委派；ClassLoader
+
 这个其实要是问起来其实是有很多东西的，如果是Java相关其实还好，会问你类加载机制，但是Android里面除了Java的类加载机制之外，还会引出插件化跟热修复。### 25. 虚拟机
 JVM
 对于Java，加载的是Class文件，一般会问到Java运行时的内存分配，类加载机制以及GC，实际上后面两个问地比较多，尤其是GC相关，往往结合四种引用出题，最后会通过这个来引出内存泄露相关的一些问题。
@@ -199,14 +218,11 @@ JVM
 DVM&ART
 Android的虚拟就DVM以及ART是对JVM做了一些优化，加载的是dex文件，对Class字节码做了一些优化，这个里面其实挺复杂的，我只知道一些基本的概念。
 
-
-### 25. JNI
+### 24. JNI
 基本上稍微大点的公司都会问到，不过我的回答始终如一：我只能看懂C的代码，项目中没有用过JNI，当然这个属于加分项，因为我当时的选择是把我用过熟悉的东西研究地滚瓜烂熟，而不是在自己平时很少接触到的东西上面搞个一知半解。
 
-### 26. Binder
+### 25. Binder
 Binder系列，各种AMS,WMS,PWS，常问到的有APP的启动流程，然后两个Activity相互跳转的时候的生命周期，Activity的生命周期。
-
-
 
 
 ## 二、Java 面试
