@@ -94,7 +94,82 @@ ViewGroup 的 dispatchDraw 方法会遍历所有子 View 的 draw 方法。
 * 使用 merge 标签减少布局的嵌套层次
 * 使得Layout宽而浅，而不是窄而深（在Hierarchy Viewer的Tree视图里面体现）
 
-### 3. 事件分发及举例说明；
+参考：
+https://blog.csdn.net/carson_ho/article/details/56009827
+### 3. 事件分发及举例说明
+
+#### 3.1 事件分发的基础知识：
+
+##### a. 事件分发的对象是谁？点击事件（Touch 事件）
+当用户触摸屏幕时（View 或 ViewGroup 派生的控件），将产生点击事件（Touch事件），Touch事件的相关细节（发生触摸的位置、时间等）被封装成 MotionEvent 对象
+
+事件类型：
+
+* MotionEvent.ACTION_DOWN： 按下View（所有事件的开始）
+* MotionEvent.ACTION_UP：抬起 View（与 DOWN 对应）
+* MotionEvent.ACTION_MOVE：滑动 View
+* MotionEvent.ACTION_CANCEL： 结束事件（非人为原因）
+
+事件序列（从手指接触屏幕 至 手指离开屏幕，这个过程产生的一系列事件），即当一个点击事件（MotionEvent ）产生后，系统需把这个事件传递给一个具体的 View 去处理。
+
+![](event_dispatch/事件序列.png)
+
+##### b. 事件分发的本质
+将点击事件（MotionEvent）传递到某个具体的View & 处理的整个过程，即事件传递的过程 = 分发过程
+
+##### c. 事件在哪些对象之间进行传递？
+
+Activity、ViewGroup、View: Android 的 UI 界面由Activity、ViewGroup、View 及其派生类组成
+
+![](event_dispatch/Android界面构成.png)
+
+![](event_dispatch/界面详解.png)
+
+##### d. 事件分发的顺序
+
+即 事件传递的顺序：Activity -> ViewGroup -> View
+即：1个点击事件发生后，事件先传到 Activity、再传到ViewGroup、最终再传到 View
+
+##### e. 事件分发过程由哪些方法协作完成？
+
+dispatchTouchEvent() 、onInterceptTouchEvent()和onTouchEvent()
+
+![](event_dispatch/分发过程.png)
+
+
+#### 3.2 Activity 的事件分发机制
+
+当一个点击事件发生时，从Activity的事件分发开始（Activity.dispatchTouchEvent()）
+
+![](event_dispatch/ActivityDispatch.png)
+
+![Activity 分发核心方法](event_dispatch/Activity核心方法.png)
+
+#### 3.3 ViewGroup 事件的分发机制
+
+Android 事件分发总是先传递到 ViewGroup、再传递到 View
+
+![](event_dispatch/ViewGroup分发.png)
+
+![](event_dispatch/ViewGroup核心方法.png)
+
+#### 3.4  View 事件的分发机制
+
+View 事件分发机制从 dispatchTouchEvent() 开始
+![](event_dispatch/View分发机制.png)
+
+![](event_dispatch/View核心方法.png)
+
+#### 3.5 总结：
+
+![](event_dispatch/分发总结.png)
+
+![](event_dispatch/角色核心.png)
+
+![](event_dispatch/方法核心.png)
+
+参考：https://blog.csdn.net/carson_ho/article/details/54136311
+
 ### 4. LruCache和DisLruCache的原理；；
 ### 5. 谈谈内存优化；
 ### 6. 安卓中方法数不能超过 64k 的原因，及如何处理；
