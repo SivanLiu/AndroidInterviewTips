@@ -171,7 +171,12 @@ View 事件分发机制从 dispatchTouchEvent() 开始
 
 参考：https://blog.csdn.net/carson_ho/article/details/54136311
 
-### 4. LruCache和DisLruCache的原理；
+### 4. LruCache 和 DiskLruCache 的原理；
+
+LRU(Least Recently Used)核心思想是当缓存满时，会优先淘汰那些近期最少使用的缓存对象，有效的避免了 OOM 的出现。在Android 中采用 LRU 算法的常用缓存有两种：LruCache 和DisLruCache，分别用于实现内存缓存和硬盘缓存
+
+
+
 
 ### 5. 谈谈内存优化；
 
@@ -872,9 +877,792 @@ public class ThreadPoolTest {
 
 #### 12. 谈谈对 http 缓存的了解。
 
-#### 13. ArrayList、Vector、LinkedList的区别；
+#### 13. 谈谈 Java 集合，ArrayList、Vector、LinkedList的区别；
+
+##### 13.1 集合概述：
+
+Java 集合大致可以分为 Set、List、Queue 和 Map 四种体系，其中 Set 代表无序、不可重复的集合；List 代表有序、可重复的集合；而 Map 则代表具有映射关系的集合；Queue 代表一种队列集合。
+Collection 接口是 List、Set 和 Queue 接口的父接口，该接口里定义的方法既可用于操作 Set 集合，也可用于操作 List 和 Queue 集合；
+Collection 主要包括添加对象、删除对象、清空容器、判断容器是否为空等操作方法。
+
+```java
+public class CollectionUtils {
+    public static void main(String[] args) {
+        Collection first = new ArrayList();
+        first.add("first collection");
+        first.add(1);
+        System.out.println("sivan first collection " + first);
+        first.remove(1);
+        System.out.println("sivan first collection " + first);
+        System.out.println("sivan first collection contain 1 =" + first.contains(1));
+
+        Collection second = new HashSet();
+        second.add("second collection");
+        second.add(2);
+
+        first.addAll(second);
+        System.out.println("sivan first add second collection = " + first);
+        System.out.println("sivan first contains second collection = " + first.containsAll(second));
+
+        System.out.println("sivan first retainAll second =" + first.retainAll(second) + " after first = " + first);
+
+        first.removeAll(second);
+        System.out.println("sivan first remove second collection = " + first);
+
+        first.clear();
+        System.out.println("sivan first collection clear = " + first);
+
+    }
+}
+
+```
+
+##### 13.2 遍历集合：
+
+###### a. 使用 Lambda 表达式遍历：
+
+Java 8 为 Iterable 接口新增了一个 forEach(Consumer action) 默认方法，该方法所需参数的类型是一个函数式接口，而
+Iterable 接口是 Collection 接口的父接口，当调用 Iterable 的 forEach(Consumer action)遍历集合元素时，程序会依次将集合元素传给 Consumer 的 accept(T t) 方法。
+
+```java
+public class CollectionUtils {
+    public static void main(String[] args) {
+        Collection firstCollection = new ArrayList();
+        firstCollection.add("first");
+        firstCollection.add("second");
+        firstCollection.add("third");
+
+        firstCollection.forEach(object -> System.out.println("sivan lambda : " + object));
+    }
+}
+```
+
+###### b. 利用 Iterator 遍历集合元素
+
+Iterator 主要用于遍历 Collection 集合中的元素，称为迭代器。
+
+```java
+public class CollectionUtils {
+    public static void main(String[] args) {
+        Collection firstCollection = new ArrayList();
+        firstCollection.add("first");
+        firstCollection.add("second");
+        firstCollection.add("third");
+
+        Iterator it = firstCollection.iterator();
+
+        while (it.hasNext()) {
+            System.out.println("sivan iterator element :" + it.next());
+        }
+    }
+}
+
+```
+
+###### c. 利用 Lambda 遍历 Iterator
+
+Java 8 为 Iterator 新增了一个 forEachRemaining(Consumer action) 方法，该方法所需的  Consumer 参数同样也是函数式接口，当调用 Iterator 的 forEachRemaining(Consumer action) 方法时，程序会依次将集合元素传给 Consumer 的 accept(T t) 方法。
+
+```java
+public class CollectionUtils {
+    public static void main(String[] args) {
+        Collection firstCollection = new ArrayList();
+        firstCollection.add("first");
+        firstCollection.add("second");
+        firstCollection.add("third");
+
+        Iterator it = firstCollection.iterator();
+        it.forEachRemaining(obj -> System.out.println("sivan for each remain = " + obj));
+    }
+}
+```
+
+###### d. 利用 forEach 遍历集合元素
+
+```java
+public class CollectionUtils {
+    public static void main(String[] args) {
+        Collection firstCollection = new ArrayList();
+        firstCollection.add("first");
+        firstCollection.add("second");
+        firstCollection.add("third");
+
+
+        for (Object element : firstCollection) {
+            System.out.println("sivan foreach element = " + element);
+        }
+    }
+}
+```
+
+###### f. 通过 Predicate 操作集合
+
+Predicate 是函数式接口，可用 Lambda 表达式作为参数
+
+```java
+public class CollectionUtils {
+    public static void main(String[] args) {
+        Collection firstCollection = new ArrayList();
+        firstCollection.add("first");
+        firstCollection.add("second");
+        firstCollection.add("third");
+
+        //使用 Lambda 表达式（目标类型是 Predicate）过滤集合
+        System.out.println("sivan resultAll  " + resultAll(firstCollection, ele -> ((String) ele).length() > 5));
+    }
+
+    private static int resultAll(Collection collection, Predicate p) {
+        int total = 0;
+        for (Object object : collection) {
+            if (p.test(object)) {
+                System.out.println("sivan object = " + object);
+                total++;
+            }
+        }
+
+        return total;
+    }
+}
+```
+
+###### g. 通过 Stream 操作集合
+
+Stream 是一个通用的流接口，表示多个支持串行和并行聚集操作的元素，使用其步骤如下：
+
+* 使用 Stream 或 XxxStream 的 builder 类方法创建该 Stream 对应的 Builder；
+* 重复调用 Builder 的 add() 方法向该流中添加多个元素；
+* 调用 Builder 的 build 方法获取对应的 Stream；
+* 调用 Stream 的聚集方法；
+
+```java
+public class CollectionUtils {
+    public static void main(String[] args) {
+        Collection firstCollection = new ArrayList();
+        firstCollection.add("first");
+        firstCollection.add("second");
+        firstCollection.add("third");
+
+        System.out.println(firstCollection.stream().filter(ele -> ((String) ele).length() > 5).count());
+
+        //先调用 stream() 方法将集合转换为 Stream，再调用 Stream 的 mapToInt() 方法获取原有的 Stream 对应的 IntStream
+        firstCollection.stream().mapToInt(ele -> ((String) ele).length()).forEach(System.out::println);
+    }
+}
+```
+
+##### 13.3 Set 集合
+
+Set 与 Collection 基本相同，只是行为略有不同，Set 不允许包含相同的元素。Set 包括  HashSet、TreeSet 和 Enumset 三个实现类。
+
+###### 1）HashSet
+
+HashSet 按照 Hash 算法来存储集合中的元素，具有很好地存取和查找性能
+
+####### a. HashSet 特点：
+
+* 不能保证元素的排列顺序，顺序可能与添加顺序不同，顺序也可能发生变化；
+* HashSet 不是同步的，如果多个线程同时访问同一个 HashSet，则必须通过代码来保证其同步；
+* 集合元素值可为 null;
+
+当向 HashSet 集合中存入一个元素时，HashSet 会调用该对象的 hashCode 方法计算该对象的 hashCode  值，然后根据该hashCode 值决定该对象在 HashSet 中的存储位置，如果有两个元素通过 equals 方法比较返回 true，但它们的 hashCode 方法返回值不相等，HashSet 会把它们存储在不同的位置，即 HashSet 集合判断两个元素相等的标准是 equals() 方法和 hashCode() 方法的返回值都相等。
+
+```java
+public class SetDemo {
+    public static void main(String[] args) {
+        HashSet hashSet = new HashSet();
+        hashSet.add(new A());
+        hashSet.add(new A());
+
+        hashSet.add(new B());
+        hashSet.add(new B());
+
+        hashSet.add(new C());
+        hashSet.add(new C());
+
+        System.out.println("sivan hashSet = "+hashSet);
+    }
+}
+
+class A {
+    @Override
+    public boolean equals(Object obj) {
+        return true;
+    }
+}
+
+class B {
+    @Override
+    public int hashCode() {
+        return 1;
+    }
+}
+
+class C {
+    @Override
+    public boolean equals(Object obj) {
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return 2;
+    }
+}
+
+result:
+sivan hashSet = [com.company.A@5e2de80c, com.company.B@1, com.company.B@1, com.company.C@2, com.company.A@60e53b93]
+```
+
+可以看出 A、B 仅重写了 equals 或 hashCode 方法，当作两个对象，C 重写了 equals 和 hashCode 方法，被当作同一个对象。
+
+####### b. HashSet 基本原则：
+
+* 同一个对象调用多次 hashCode() 方法应该返回相同的值；
+* 当两个对象通过 equals() 方法比较返回 true 时，这两个对象的 hashCode() 方法应返回相等的值；
+* 对象中用作 equals() 方法比较标准的实例变量，都应该用于计算 hashCode 值；
+
+####### c. 重写 hashCode 方法的一般步骤：
+
+* 把对象内每个有意义的实例变量计算出一个 int 类型的 hashCode 值；
+* 组合上一步计算出的多个实例变量的 hashCode 值；
+
+```java
+class People {
+    int count;
+
+    public People(int count) {
+        this.count = count;
+    }
+
+    public String toString() {
+        return "People[count: " + count + "]";
+    }
+
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj != null && obj.getClass() == People.class) {
+            People people = (People) obj;
+            return this.count == people.count;
+        }
+
+        return false;
+    }
+
+    public int hashCode() {
+        return this.count;
+    }
+}
+
+public class SetDemo {
+    public static void main(String[] args) {
+        HashSet hashSet = new HashSet();
+        hashSet.add(new People(1));
+        hashSet.add(new People(2));
+        hashSet.add(new People(3));
+        hashSet.add(new People(4));
+
+        System.out.println("sivan people 1 = " + hashSet);
+
+        Iterator iterator = hashSet.iterator();
+        People first = (People) iterator.next();
+
+        first.count = 2;
+        System.out.println("sivan people 2 = " + hashSet);
+
+        hashSet.remove(new People(2));
+        System.out.println("sivan people 3 = " + hashSet);
+        System.out.println("sivan people contains 1  = " + hashSet.contains(new People(2)));
+        System.out.println("sivan people contains 2  = " + hashSet.contains(new People(3)));
+    }
+}
+
+result:
+sivan people 1 = [People[count: 1], People[count: 2], People[count: 3], People[count: 4]]
+sivan people 2 = [People[count: 2], People[count: 2], People[count: 3], People[count: 4]]
+sivan people 3 = [People[count: 2], People[count: 3], People[count: 4]]
+sivan people contains 1  = false
+sivan people contains 2  = true
+```
+
+###### 2) LinkedHashSet 类
+
+LinkedHashSet 是 HashSet 子类，其同样根据元素的 hashCode 值来决定元素的存储位置，但同时还是用链表维护元素的次序，如此使得元素看起来是以插入的顺序保存的；当遍历 LinkedHashSet 集合里的元素时，LinkedHashSet 将会按元素的添加顺序来访问集合里的元素。
+
+```java
+public class SetDemo {
+    public static void main(String[] args) {
+        LinkedHashSet linkedHashSet = new LinkedHashSet();
+        linkedHashSet.add("link 1");
+        linkedHashSet.add("link 2");
+        linkedHashSet.add("link 3");
+        System.out.println("sivan linkhashset 1 = "+linkedHashSet);
+        linkedHashSet.remove("link 1");
+        linkedHashSet.add("link 1");
+        System.out.println("sivan linkhashset 2 = "+linkedHashSet);
+    }
+}
+
+result :
+sivan linkhashset 1 = [link 1, link 2, link 3]
+sivan linkhashset 2 = [link 2, link 3, link 1]
+```
+
+###### 3) TreeSet 类
+
+TreeSet 是 SortedSet 接口的实现类，可以确保集合元素处于排序状态，与 HashSet 相比增加了额外的排序选择方法：
+
+* Comparator comparator(): 如果 TreeSet 采用了定制排序，则该方法返回定制排序所使用的 Comparator；如果采用了自然排序，则返回 null；
+* Object first(): 返回集合中的第一个元素；
+* Object last(): 返回集合中的最后一个元素；
+* Object lower(Object e): 返回集合中位于指定元素之前的元素，即小于指定元素的最大元素；
+* Object higher(Object e): 返回集合中位于指定元素之后的元素，即大于指定元素的最小元素；
+* SortedSet subSet(Object fromElement, Object toElement)：返回此 Set 中指定范围的子集合；
+* SortedSet headSet(Object toElement): 返回此 Set 中小于 toElement 的元素构成的集合；
+* SortedSet tailSet(Object fromElement)：返回此 Set 的子集，由大于或者等于 fromElement 的元素构成；
+
+```java
+public class SetDemo {
+    public static void main(String[] args) {
+        TreeSet treeSet = new TreeSet();
+        treeSet.add(2);
+        treeSet.add(9);
+        treeSet.add(10);
+        treeSet.add(21);
+        treeSet.add(15);
+
+        System.out.println("sivan treeset = "+treeSet);
+        System.out.println("sivan treeset first = "+treeSet.first());
+        System.out.println("sivan treeset last = "+treeSet.last());
+        System.out.println("sivan treeset headSet = "+treeSet.headSet(10));
+        System.out.println("sivan treeset tailSet = "+treeSet.tailSet(9));
+        System.out.println("sivan treeset subSet = "+treeSet.subSet(9, 15));
+    }
+}
+
+result:
+sivan treeset = [2, 9, 10, 15, 21]
+sivan treeset first = 2
+sivan treeset last = 21
+sivan treeset headSet = [2, 9]
+sivan treeset tailSet = [9, 10, 15, 21]
+sivan treeset subSet = [9, 10]
+```
+
+TreeSet 并不是根据元素的插入顺序来排序的，而是根据元素的实际值来进行排序；与 HashSet 集合采用 hash 算法来决定元素顺序的存储位置不同，TreeSet 采用红黑树的数据结构来存储集合元素，TreeSet 支持自然排序和定制排序。
+
+######## a. 自然排序
+TreeSet 调用集合元素的 compareTo(Object obj) 方法来比较元素之间的大小关系，然后将集合元素按升序排列，此方式就是自然排序；Java 提供了一个 Comparable 接口，其定义了一个 compareTo(Object obj) 方法，该方法返回一个整数值，实现该接口的类必须实现该方法，实现了该接口的类的对象就可以比较大小。
+
+```java
+class People implements Comparable {
+    int count;
+
+    public People(int count) {
+        this.count = count;
+    }
+
+    public String toString() {
+        return "People[count: " + count + "]";
+    }
+
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj != null && obj.getClass() == People.class) {
+            People people = (People) obj;
+            return this.count == people.count;
+        }
+
+        return false;
+    }
+
+    public int hashCode() {
+        return this.count;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        People people = (People) o;
+        return Integer.compare(count, people.count);
+    }
+}
+
+public class SetDemo {
+    public static void main(String[] args) {
+        TreeSet treeSet = new TreeSet();
+        treeSet.add(new People(5));
+        treeSet.add(new People(9));
+        treeSet.add(new People(15));
+        treeSet.add(new People(30));
+        System.out.println("sivan treeSet before = " + treeSet);
+
+        //取出第一个元素
+        People first = (People) treeSet.first();
+        first.count = 20;
+
+        //取出最后一个元素
+        People last = (People) treeSet.last();
+        last.count = 9;
+
+        //再次输出，集合处于无序状态，且有重复元素
+        System.out.println("sivan treeSet after = " + treeSet);
+
+        //删除实例变量被改变的元素，删除元素
+        System.out.println("sivan treeSet remove first " + treeSet.remove(new People(20)));
+        System.out.println("sivan treeSet remove first after " + treeSet);
+
+        //删除实例变量没有被改变的元素，删除成功
+        System.out.println("sivan treeSet remove second " + treeSet.remove(new People(15)));
+        System.out.println("sivan treeSet remove second after " + treeSet);
+    }
+}
+
+ result:
+
+sivan treeSet before = [People[count: 5], People[count: 9], People[count: 15], People[count: 30]]
+sivan treeSet after = [People[count: 20], People[count: 9], People[count: 15], People[count: 9]]
+sivan treeSet remove first false
+sivan treeSet remove first after [People[count: 20], People[count: 9], People[count: 15], People[count: 9]]
+sivan treeSet remove second true
+sivan treeSet remove second after [People[count: 20], People[count: 9], People[count: 9]]
+```
+
+######## b. 定制排序
+TreeSet 的自然排序是根据集合元素的大小，TreeSet 将它们以升序排列，如果要自定义排序，可以自实现 Comparator 接口
+
+```java
+class Man {
+    int age;
+
+    public Man(int age) {
+        this.age = age;
+    }
+
+    public String toString() {
+        return "M[age:+" + age + "]";
+    }
+}
+
+public class SetDemo {
+    public static void main(String[] args) {
+        TreeSet treeSet = new TreeSet(new Comparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                Man first = (Man) o1;
+                Man second = (Man) o2;
+                return first.age > second.age ? -1 : first.age < second.age ? 1 : 0;
+            }
+        });
+
+        treeSet.add(new Man(45));
+        treeSet.add(new Man(90));
+        treeSet.add(new Man(20));
+
+        System.out.println("sivan treeSet " + treeSet);
+    }
+}
+```
+
+###### 4) EnumSet 类
+
+EnumSet 类是一个转为枚举类设计的集合类，EnumSet 中的所有元素都必须是指定枚举类型的枚举值，EnumSet 的集合元素也是有序的，EnumSet 以枚举值在 Enum 类内的定义顺序来决定集合元素的顺序。
+
+```java
+enum Season {
+    SPRING, SUMMER, FALL, WINTER
+}
+
+public class SetDemo {
+    public static void main(String[] args) {
+        EnumSet enumSet1 = EnumSet.allOf(Season.class);
+        System.out.println("sivan enumSet1 " + enumSet1);
+        EnumSet enumSet2 = EnumSet.noneOf(Season.class);
+        System.out.println("sivan enumSet2 " + enumSet2);
+
+        enumSet2.add(Season.WINTER);
+        enumSet2.add(Season.FALL);
+
+        System.out.println("sivan enumSet2 after add " + enumSet2);
+
+        //指定枚举值创建 EnumSet 集合
+        EnumSet enumSet3 = EnumSet.of(Season.SPRING, Season.SUMMER);
+        System.out.println("sivan enumSet3 " + enumSet3);
+
+        EnumSet enumSet4 = EnumSet.range(Season.SUMMER, Season.WINTER);
+        System.out.println("sivan enumSet4 " + enumSet4);
+
+        //新创建的 EnumSet 集合元素和 enumSet4 集合元素有相同的类型
+        //enumSet5 + enumSet4 = Season 枚举类的全部枚举值
+        EnumSet enumSet5 = EnumSet.complementOf(enumSet4);
+        System.out.println("sivan enumSet5 " + enumSet5);
+
+        //复制枚举集合
+        EnumSet enumSet6 = EnumSet.copyOf(enumSet1);
+        System.out.println("sivan enumSet6 " + enumSet6);
+    }
+}
+
+result:
+
+sivan enumSet1 [SPRING, SUMMER, FALL, WINTER]
+sivan enumSet2 []
+sivan enumSet2 after add [FALL, WINTER]
+sivan enumSet3 [SPRING, SUMMER]
+sivan enumSet4 [SUMMER, FALL, WINTER]
+sivan enumSet5 [SPRING]
+sivan enumSet6 [SPRING, SUMMER, FALL, WINTER]
+```
+
+##### 13.4 List 集合
+
+List 集合代表一个元素有序、可重复的集合，集合中每个元素都有其对应的顺序索引，可通过索引来访问指定位置的集合元素。
+
+###### 1）List 和 ListIterator 接口
+
+List 作为 Collection 接口的子接口，可以使用 Collection 接口中的全部方法，而由于 List 是有序集合，因此 List 集合里增加了一些索引来操作集合元素的方法。
+
+```java
+class A {
+    @Override
+    public boolean equals(Object obj) {
+        return true;
+    }
+}
+
+public class ListDemo {
+    public static void main(String[] args) {
+        List list = new ArrayList();
+        list.add("list one");
+        list.add("list two");
+        list.add("list three");
+
+        System.out.println("sivan list = " + list);
+
+        //删除集合中的 A 对象，将导致第一个元素被删除
+        list.remove(new A());
+        System.out.println("sivan remove first " + list);
+
+        //删除集合中的 A 对象，再次删除集合中的第一个元素
+        list.remove(new A());
+        System.out.println("sivan remove second " + list);
+
+
+        list.add("list four");
+        list.add("list five");
+        list.add("list six");
+        list.sort(new Comparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                return ((String) o1).length() - ((String) o2).length();
+            }
+        });
+
+        System.out.println("sivan list sort = "+list);
+
+        list.replaceAll(new UnaryOperator() {
+            @Override
+            public Object apply(Object o) {
+                return ((String)o).length();
+            }
+        });
+
+        System.out.println("sivan list replaceAll = "+list);
+    }
+}
+```
+
+从 List 中删除一个对象时，List 将会调用该对象的 equals() 方法依次与集合元素进行比较，如果该 equals() 方法以某个集合元素作为参数时返回 true，List 将会删除该元素
+
+当调用 List 的 set(int index, Object element) 方法来改变 List 集合指定索引处的元素时，指定的索引必须是 List 集合的有效索引，即 set(int index, Object element) 方法不会改变 List 集合的长度
+
+List 提供了 listIterator() 方法，继承了 Iterator 接口，提供了专门操作 List 的方法，listIterator() 接口在 Iterator 接口基础上增加了如下方法：
+
+* boolean hasPrevious(): 返回该迭代器关联的集合是否还有上一个元素；
+* Object previous(): 返回该迭代器的上一个元素；
+* void add(Object o): 在指定位置插入一个元素；
+
+```java
+public class ListDemo {
+    public static void main(String[] args) {
+        List list = new ArrayList();
+        list.add("list one");
+        list.add("list two");
+        list.add("list three");
+
+        System.out.println("sivan list = " + list);
+
+        ListIterator iterator = list.listIterator();
+        while (iterator.hasNext()) {
+            System.out.println("sivan iterator element : " + iterator.next());
+        }
+
+        if (iterator.hasPrevious()) {
+            System.out.println("sivan iterator  preElement : " + iterator.previous());
+        }
+
+        iterator.add("list insert");
+        System.out.println("sivan iterator after insert : " + list);
+    }
+}
+
+result:
+
+sivan list = [list one, list two, list three]
+sivan iterator element : list one
+sivan iterator element : list two
+sivan iterator element : list three
+sivan iterator  preElement : list three
+sivan iterator after insert : [list one, list two, list insert, list three]
+
+```
+
+###### 2) ArrayLis 和 Vector 实现类
+
+ArrayList 和 Vector 类封装了一个动态的、允许再分配的 Object[] 数组，使用 initialCapacity 参数来设置该数组的长度，当向 ArrayList 或 Vector 中添加元素超出了该数组的长度时，initialCapacity 会自动增加。
+
+* ArrayList 是线程不安全地，当多个线程访问同一个 ArrayList 集合时，如果有多个线程修改了 ArrayList 集合，则程序必须手动保证该集合的同步性；
+* Vector 集合则是线程安全地；
+
+###### 3) 固定长度的 List
+
+Arrays.ArrayList 是一个固定长度的 List，程序只能遍历访问集合里的元素，不可增加、删除该集合里的元素；其 asList(Object... o) 方法可以把一个数组或指定个数的对象转换成一个 List 集合
+
+```java
+public class ListDemo {
+    public static void main(String[] args) {
+        List fixedSizeList = Arrays.asList("one", "two", "three");
+        System.out.println("sivan fixedSizeList " + fixedSizeList.getClass());
+        fixedSizeList.forEach(System.out::println);
+    }
+}
+
+result:
+
+sivan fixedSizeList class java.util.Arrays$ArrayList
+one
+two
+three
+```
+
+###### 4) Queue 集合
+
+Queue 用于模拟队列（先进先出）数据结构，队列的头部保存在队列中存放时间最长的元素，队列的尾部保存在队列中存放时间最短的元素，新元素插入到队列的尾部，访问元素操作会返回队列头部的元素。
+
+__PriorityQueue 实现类__：
+
+PriorityQueue 是一个比较标准的队列，并不是按加入队列的顺序保存队列元素，而是按队列元素的大小进行重新排序，当调用 peek() 或 pull() 方法取出队列中的元素时，并不是取出最先进入队列的元素，而是取出队列中最小的元素。
+
+```java
+public class QueueDemo {
+    public static void main(String[] args) {
+        PriorityQueue priorityQueue = new PriorityQueue();
+
+        //加入元素到队列中
+        priorityQueue.offer(1);
+        priorityQueue.offer(-5);
+        priorityQueue.offer(0);
+        priorityQueue.offer(8);
+
+        System.out.println("sivan priorityQueue = " + priorityQueue);
+        //输出队列中的元素
+        System.out.println("sivan priorityQueue poll = " + priorityQueue.poll());
+    }
+}
+
+result:
+
+sivan priorityQueue = [-5, 1, 0, 8]
+sivan priorityQueue poll = -5
+```
+
+PriorityQueue 不允许插入 null 元素，还需对队列元素进行排序，PriorityQueue 的元素有两种排序方式：
+
+* 自然排序：采用自然排序的 PriorityQueue 集合中的元素必须实现了 Comparable 接口，而且应该是同一个类的多个实例；
+* 自定义排序：创建 PriorityQueue 队列时，传入一个 Comparator 对象，该对象负责对队列中的所有元素进行排序，此时不用实现 Comparable 接口；
+
+__Dequeue 接口与 ArrayDequeue 实现类__：
+
+Dequeue 接口是 Queue 接口的子接口，代表一个双端队列，还可以被当作栈来使用，因为该类包含了出栈和入栈两个方法；
+
+ArrayQueue 是 Dequeue 的实现类，基于数组实现的双端队列，创建 Dequeue 时同样可指定 numElements 参数，该参数表示 Object[] 数组的长度，如果不指定，则 Dequeue 底层数组的长度为 16；
+
+ArrayList 和 ArrayQueue 两个集合类的实现机制基本类似，它们的底层都采用一个动态的，可重分配的 Object[] 数组来存储集合元素，当集合元素超出该数组的容量时，系统会在底层重新分配一个 Object[] 数组来存储集合元素；
+
+__LinkedList 实现类__：
+
+LinkedList 类是 List 接口的实现类，根据索引来随机访问集合中的元素，除此之外，LinkedList 还实现了 Dequeue 接口，可以被当作双端队列来使用，因此既可以当作栈来使用，也可以当作队列使用
+
+```java
+public class QueueDemo {
+    public static void main(String[] args) {
+        LinkedList linkedList = new LinkedList();
+
+        linkedList.offer("one");
+        linkedList.offer("two");
+        linkedList.push("three");
+        linkedList.offerFirst("zero");
+
+        System.out.println("sivan linkedList = "+linkedList);
+        System.out.println("sivan linkedList first = "+linkedList.peekFirst());
+        System.out.println("sivan linkedList last = "+linkedList.peekLast());
+        System.out.println("sivan linkedList pop = "+linkedList.pop());
+        System.out.println("sivan linkedList = "+linkedList);
+        System.out.println("sivan linkedList pollLast = "+linkedList.pollLast());
+    }
+}
+```
+
+LinkedList 内部以链表的形式来保存集合中的元素，因此随机访问集合元素的性能较差，但在插入、删除元素时，性能较好；Vector 同样是以数组的形式来存储集合元素的，但因为它实现了线程同步功能，各方面性能都较差。
+
+__各种线性表的性能比较__：
+
+* 如果需要遍历 List 集合元素，对于 ArrayList、Vector 集合，应该使用随机访问方法来遍历集合元素；对于 LinkedList 集合，则应该采用迭代器来遍历集合元素；
+* 如果需要经常插入、删除操作来改变包含大量数据的 List 集合的大小，可考虑使用 LinkedList 集合，使用 ArrayList、Vector 集合可能需要经常重新分配内部数组的大小，效果可能较差；
+* 如果有多个线程需要同时访问 list 集合中的元素，可考虑使用 Collections 将集合包装成线程安全地集合；
 
 #### 14. JVM垃圾回收机制；
+
+#### 15. LinkedHashMap 原理
+
+LinkedHashMap 是 HashMap 的一个子类，它保留插入的顺序；LinkedHashMap 是 Map 接口的哈希表和链接列表实现，具有可预知的迭代顺序，此实现提供所有可选的映射操作，并允许使用 null 值和 null 键；LinkedHashMap 实现与 HashMap 的不同之处在于，后者维护着一个运行于所有条目的双重链接列表。此链接列表定义了迭代顺序，该迭代顺序可以是插入顺序或者是访问顺序。
+注意，此实现不是同步的。如果多个线程同时访问链接的哈希映射，而其中至少一个线程从结构上修改了该映射，则它必须保持外部同步。
+根据链表中元素的顺序可以分为：按插入顺序的链表，和按访问顺序(调用get方法)的链表；
+默认是按插入顺序排序，如果指定按访问顺序排序，那么调用 get 方法后，会将这次访问的元素移至链表尾部，不断访问可以形成按访问顺序排序的链表；可以重写 removeEldestEntry 方法返回 true 值指定插入元素时移除最老的元素。 
+
+##### 15.1 LinkedHashMap 实现：
+
+对于 LinkedHashMap 而言，它继承与 HashMap、底层使用哈希表与双向链表来保存所有元素。其基本操作与父类 HashMap 相似，它通过重写父类相关的方法，来实现自己的链接列表特性。
+
+###### a. 成员变量：
+
+LinkedHashMap 采用的 hash 算法和 HashMap 相同，但是它重新定义了数组中保存的元素 Entry，该Entry 除了保存当前对象的引用外，还保存了其上一个元素 before 和下一个元素 after 的引用，从而在哈希表的基础上又构成了双向链接列表。
+
+###### b. 初始化：
+
+在 LinkedHashMap 的构造方法中，实际调用了父类 HashMap 的相关构造方法来构造一个底层存放的 table数组。
+
+LinkedHashMap 重写了 init() 方法，在调用父类的构造方法完成构造后，进一步实现了对其元素 Entry 的初始化操作。
+
+###### c. 存储
+
+LinkedHashMap 并未重写父类 HashMap 的 put 方法，而是重写了父类 HashMap 的 put 方法调用的子方法 recordAccess、addEntry、createEntry，提供了自己特有的双向链接列表的实现。
+
+```java
+ void recordAccess(HashMap m)
+ void addEntry(int hash, K key, V value, int bucketIndex)
+ void createEntry(int hash, K key, V value, int bucketIndex)
+```
+
+
+###### d. 读取
+
+LinkedHashMap 重写了父类 HashMap 的 get 方法，实际在调用父类 getEntry() 方法取得查找的元素后，再判断当排序模式 accessOrder 为 true 时，记录访问顺序，将最新访问的元素添加到双向链表的表头，并从原来的位置删除。由于的链表的增加、删除操作是常量级的，故并不会带来性能的损失。
+
 
 ## 三、算法
 ### 1. 电梯运行的算法分析；
