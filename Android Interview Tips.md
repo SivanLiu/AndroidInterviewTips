@@ -1058,7 +1058,7 @@ Set 与 Collection 基本相同，只是行为略有不同，Set 不允许包含
 
 HashSet 按照 Hash 算法来存储集合中的元素，具有很好地存取和查找性能
 
-####### a. HashSet 特点：
+__a. HashSet 特点__:
 
 * 不能保证元素的排列顺序，顺序可能与添加顺序不同，顺序也可能发生变化；
 * HashSet 不是同步的，如果多个线程同时访问同一个 HashSet，则必须通过代码来保证其同步；
@@ -1115,13 +1115,13 @@ sivan hashSet = [com.company.A@5e2de80c, com.company.B@1, com.company.B@1, com.c
 
 可以看出 A、B 仅重写了 equals 或 hashCode 方法，当作两个对象，C 重写了 equals 和 hashCode 方法，被当作同一个对象。
 
-####### b. HashSet 基本原则：
+__b. HashSet 基本原则__:
 
 * 同一个对象调用多次 hashCode() 方法应该返回相同的值；
 * 当两个对象通过 equals() 方法比较返回 true 时，这两个对象的 hashCode() 方法应返回相等的值；
 * 对象中用作 equals() 方法比较标准的实例变量，都应该用于计算 hashCode 值；
 
-####### c. 重写 hashCode 方法的一般步骤：
+__c. 重写 hashCode 方法的一般步骤__：
 
 * 把对象内每个有意义的实例变量计算出一个 int 类型的 hashCode 值；
 * 组合上一步计算出的多个实例变量的 hashCode 值；
@@ -1253,7 +1253,8 @@ sivan treeset subSet = [9, 10]
 
 TreeSet 并不是根据元素的插入顺序来排序的，而是根据元素的实际值来进行排序；与 HashSet 集合采用 hash 算法来决定元素顺序的存储位置不同，TreeSet 采用红黑树的数据结构来存储集合元素，TreeSet 支持自然排序和定制排序。
 
-######## a. 自然排序
+__a. 自然排序__:
+
 TreeSet 调用集合元素的 compareTo(Object obj) 方法来比较元素之间的大小关系，然后将集合元素按升序排列，此方式就是自然排序；Java 提供了一个 Comparable 接口，其定义了一个 compareTo(Object obj) 方法，该方法返回一个整数值，实现该接口的类必须实现该方法，实现了该接口的类的对象就可以比较大小。
 
 ```java
@@ -1332,7 +1333,8 @@ sivan treeSet remove second true
 sivan treeSet remove second after [People[count: 20], People[count: 9], People[count: 9]]
 ```
 
-######## b. 定制排序
+__b. 定制排序__:
+
 TreeSet 的自然排序是根据集合元素的大小，TreeSet 将它们以升序排列，如果要自定义排序，可以自实现 Comparator 接口
 
 ```java
@@ -1553,7 +1555,7 @@ three
 
 Queue 用于模拟队列（先进先出）数据结构，队列的头部保存在队列中存放时间最长的元素，队列的尾部保存在队列中存放时间最短的元素，新元素插入到队列的尾部，访问元素操作会返回队列头部的元素。
 
-__PriorityQueue 实现类__：
+__a. PriorityQueue 实现类__：
 
 PriorityQueue 是一个比较标准的队列，并不是按加入队列的顺序保存队列元素，而是按队列元素的大小进行重新排序，当调用 peek() 或 pull() 方法取出队列中的元素时，并不是取出最先进入队列的元素，而是取出队列中最小的元素。
 
@@ -1585,7 +1587,7 @@ PriorityQueue 不允许插入 null 元素，还需对队列元素进行排序，
 * 自然排序：采用自然排序的 PriorityQueue 集合中的元素必须实现了 Comparable 接口，而且应该是同一个类的多个实例；
 * 自定义排序：创建 PriorityQueue 队列时，传入一个 Comparator 对象，该对象负责对队列中的所有元素进行排序，此时不用实现 Comparable 接口；
 
-__Dequeue 接口与 ArrayDequeue 实现类__：
+__b. Dequeue 接口与 ArrayDequeue 实现类__：
 
 Dequeue 接口是 Queue 接口的子接口，代表一个双端队列，还可以被当作栈来使用，因为该类包含了出栈和入栈两个方法；
 
@@ -1619,7 +1621,7 @@ public class QueueDemo {
 
 LinkedList 内部以链表的形式来保存集合中的元素，因此随机访问集合元素的性能较差，但在插入、删除元素时，性能较好；Vector 同样是以数组的形式来存储集合元素的，但因为它实现了线程同步功能，各方面性能都较差。
 
-__各种线性表的性能比较__：
+__c. 各种线性表的性能比较__：
 
 * 如果需要遍历 List 集合元素，对于 ArrayList、Vector 集合，应该使用随机访问方法来遍历集合元素；对于 LinkedList 集合，则应该采用迭代器来遍历集合元素；
 * 如果需要经常插入、删除操作来改变包含大量数据的 List 集合的大小，可考虑使用 LinkedList 集合，使用 ArrayList、Vector 集合可能需要经常重新分配内部数组的大小，效果可能较差；
