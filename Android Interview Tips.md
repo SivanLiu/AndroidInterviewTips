@@ -1627,6 +1627,229 @@ __c. 各种线性表的性能比较__：
 * 如果需要经常插入、删除操作来改变包含大量数据的 List 集合的大小，可考虑使用 LinkedList 集合，使用 ArrayList、Vector 集合可能需要经常重新分配内部数组的大小，效果可能较差；
 * 如果有多个线程需要同时访问 list 集合中的元素，可考虑使用 Collections 将集合包装成线程安全地集合；
 
+##### 13.5 Map 集合
+
+Map 用于保存具有映射关系的数据，一组值用于保存 Map 里的 key，另外一组值用于保存 Map 里的 value, key 和 value 都可以是任何引用类型的数据，Map 的 key 不允许重复，key 和 value 之间存在一一对应关系。
+
+```java
+public class MapDemo {
+    public static void main(String[] args) {
+        Map map = new HashMap();
+
+        map.put("first", 1);
+        map.put("second", 2);
+        map.put("third", -6);
+        map.put("fourth", 10);
+
+        //多次放入的 key-value 对中 value 可重复
+        map.put("forth", 100);
+
+        //放入重复的 key 时，新的 value 会覆盖原有的 value
+        //如果新的 value 覆盖了原有的 value，该方法返回被覆盖的 value
+        System.out.println("sivan map put " + map.put("second", 30));
+        System.out.println("sivan map " + map);
+
+        System.out.println("sivan map " + map.containsKey("second"));
+        System.out.println("sivan map " + map.containsKey(99));
+
+        for (Object key : map.keySet()) {
+            System.out.println(" key = " + key + "--->" + map.get(key));
+        }
+
+        map.remove("third");
+        System.out.println("sivan map = " + map);
+
+        map.replace("first", 77);
+
+        //使用原 value 与传入参数计算出来的结果覆盖原有的 value
+        map.merge("third", 10, new BiFunction() {
+            @Override
+            public Object apply(Object o, Object o2) {
+                return (Integer) o + (Integer) o2;
+            }
+        });
+
+
+        //当 key 为 "Java" 对应 value 为 null 时，使用计算的结果作为新的 value
+        map.computeIfPresent("Java", new BiFunction() {
+            @Override
+            public Object apply(Object o, Object o2) {
+                return ((String) o).length();
+            }
+        });
+
+
+        //当 key 为 "Java" 对应 value 存在时，使用计算的结果作为新的 value
+        map.computeIfPresent("Java", new BiFunction() {
+            @Override
+            public Object apply(Object o, Object o2) {
+                return (Integer) o + (Integer) o2;
+            }
+        });
+
+        System.out.println("sivan map last = " + map);
+    }
+}
+```
+
+###### 13.5.1 HashMap 和 Hashtable 实现类
+
+* Hashtable 是一个线程安全的 Map 实现，但 HashMap，是线程不安全的实现，比 Hashtable 性能更高一点儿，但如果有多个线程访问同一个 Map 对象时，使用 Hashtable 实现类会更好。
+
+* Hashtable 不允许使用 null 作为 key 和 value，如果试图把 null 值放进 Hashtable 中，将会引发空指针异常，但 HashMap 可以使用 null 作为 key 或 value。
+
+###### 13.5.2 LinkedHashMap 实现类
+
+HashSet 有一个 LinkedHashSet 子类，HashMap 也有一个 LinkedHashMap 子类；LinkedHashMap 也使用双向链表来维护 key-value 对的次序，该链表负责维护 Map 的迭代顺序，迭代顺序与 key-value 对的插入顺序保持一致；
+
+LinkedHashMap 可以避免对 HashMap、Hashtable 里的 key-value 对进行排序，同时又可避免使用 TreeMap 所增加的成本；
+
+LinkedHashMap 需要维护元素的插入元素，因此性能略低于 HashMap 的性能；但因为它以链表来维护内部顺序，所以在迭代访问 Map 里的全部元素时将有较好的性能；
+
+###### 13.5.3 Properties 读写属性文件
+
+Properties 类是 Hashtable 类的子类，Properties 类可以把 Map 对象和属性文件关联起来，从而可以把 Map 对象中的 key-value 对写入属性文件中，也可以把属性文件中的 “属性名 = 属性值” 加载到 Map 对象中；由于属性文件里的属性名、属性值只能是字符串类型，所以 Properties 里的 key、value 都是字符串类型。
+
+###### 13.5.4 SortedMap 接口和 TreeMap 实现类
+
+TreeMap 就是一个红黑树数据结构，每个 key-value 对即作为红黑树的一个节点，TreeMap 存储 key-value 对时，需要根据 key 对节点进行排序，TreeMap 可以保证所有的 key-value 对处于有序状态。TreeMap 有两种排序方式：
+
+* 自然排序：TreeMap 的所有 key 必须实现 Comparable 接口，而且所有的 key ，应该是同一个类的对象，否则将会抛出类找不到异常；
+* 定制排序：创建 TreeMap 时，传入一个 Comparator 对象，该对象负责对 TreeMap 中的所有 key 进行排序；
+
+###### 13.5.5 WeakHashMap 实现类
+
+WeakHashMap 与 HashMap 区别在于，HashMap 的 key 保留了对实际对象的强引用，这意味着只要该 HashMap 对象不被销毁，该 HashMap 的所有 key 所引用的对象就不会被垃圾回收，HashMap 也不会自动删除这些 key 所对应的 key-value 对，但 WeakHashMap 的 key 只保留了对实际对象的弱引用，WeakHashMap 对象的 key 索引用的对象没有被其他强引用变量所引用，则这些 key 所引用的对象可能被垃圾回收，WeakHashMap 也可能自动删除这些 key 所对应的 key-value 对。
+WeakHashMap 中的每个 key 对象只持有对实际对象的弱引用，因此，当垃圾回收了该 key 所对应的实际对象之后，WeakHashMap 会自动删除该 key 对象的 key-value 对；WeakHashMap 中的每个 key 对象只持有对实际对象的弱引用，当垃圾回收了该 key 所对应的实际对象之后，WeakHashMap 会自动删除该 key 对应的 key-value 对。
+
+```java
+public class MapDemo {
+    public static void main(String[] args) {
+        WeakHashMap weakHashMap = new WeakHashMap();
+        weakHashMap.put(new String("first"), new String("one"));
+        weakHashMap.put(new String("second"), new String("two"));
+        weakHashMap.put(new String("third"), new String("three"));
+
+        //向 weakHashMap 中添加一个 key-value 对，该 key 是一个系统缓存的字符串对象
+        weakHashMap.put("forth", new String("four"));
+        System.out.println("sivan weakHashMap " + weakHashMap);
+
+        //通知系统立即进行垃圾回收
+        System.gc();
+        System.runFinalization();
+
+        System.out.println("sivan weakHashMap gc " + weakHashMap);
+    }
+}
+
+result:
+
+sivan weakHashMap {third=three, first=one, second=two, forth=four}
+sivan weakHashMap gc {forth=four}
+```
+
+前三个 key-value 对中的 key 都是匿名的字符串对象，weakHashMap 只保留了对他们的弱引用，垃圾回收时会自动删除，而第四个 key-value 对中的 key 是一个字符串直接量，系统会自动保留对该字符串的强引用，垃圾回收时不会回收它。
+
+###### 13.5.6 IdentityHashMap 实现类
+
+IdentityHashMap 实现类的机制与 HashMap 基本相似，但是在处理两个 key 相等时比较独特；当且仅当两个 key 严格相等(key1 == key2)时，才认为两个 key 相等；对于普通的 HashMap 而言，只要 key1 和 key2 通过 equals() 方法比较返回 true 时，且它们的 hashCode 值相等即可。
+
+```java
+public class MapDemo {
+    public static void main(String[] args) {
+        IdentityHashMap identityHashMap = new IdentityHashMap();
+        identityHashMap.put(new String("first"), new String("first"));
+        identityHashMap.put(new String("first"), new String("one"));
+
+        identityHashMap.put("second", "two");
+        identityHashMap.put("second", "two");
+
+        System.out.println("sivan identityHashMap " + identityHashMap);
+    }
+}
+
+result:
+
+sivan identityHashMap {first=one, first=first, second=two}
+```
+
+###### 13.5.7 EnumMap 实现类
+
+EnumMap 是一个与枚举类一起使用的 Map 实现，EnumMap 中的所有 key 都必须是单个枚举类的枚举值，创建 EnumMap 时必须显式或隐式指定它所对应的枚举类
+
+* EnumMap 在内部以数组形式保存；
+* EnumMap 根据 key 的自然顺序来维护 key-value 对的顺序；
+* EnumMap 不允许使用 null 作为 key，但允许使用 null 作为 value；
+
+```java
+public class MapDemo {
+    public static void main(String[] args) {
+        EnumMap enumMap = new EnumMap(Season.class);
+        enumMap.put(Season.SUMMER, "夏天");
+        enumMap.put(Season.WINTER, "冬天");
+        System.out.println("sivan enumMap " + enumMap);
+    }
+}
+
+reslut:
+
+sivan enumMap {SUMMER=夏天, WINTER=冬天}
+```
+
+###### 13.5.8 Map 实现类的性能比较
+
+* 对于 Map 的常用实现类而言，虽然 HashMap 和 Hashtable 的实现机制几乎一样，但由于 Hashtable 是一个古老的，线程安全地集合，因此 HashMap 通常比 Hashtable 要快；
+* TreeMap 通常比 HashMap、Hashtable 要慢，通常在插入、删除 key-value 对时更慢，因为 TreeMap 使用红黑树来管理 key-value 对；TreeMap 好处是可以使得 key-value 对总是处于有序状态，无需专门进行排序操作；
+* 一般应该采用 HashMap，HashMap 正是为快速查询设计的，但如果需要排好序的 Map 时，则可以考虑 TreeMap；
+* LinkedHashMap 比 HashMap 慢一点儿，因为需要维护链表来保持 Map 中 key-value 对的添加顺序，IdentityHashMap 与 HashMap 实现基本类似，只不过判断两个元素相等的方法不同；
+* EnumMap 性能最好，但只能使用同一个枚举类的枚举值作为 key；
+
+##### 13.6 Collections 集合工具类
+
+###### 13.6.1 排序操作
+
+* void reverse(List list): 反转集合元素；
+* void shuffle(List list): 随机排序；
+* void sort(List list): 自然排序对指定 List 集合元素按升序进行排序；
+* void sort(List list，Comparator c): 定制排序；
+* void swap(List list, int i, int j): 集合中 i 处元素和 j 处元素交换；
+* void rotate(List list, int distance)： 当 distance 为正数时，将 list 集合的后 distance 个元素整体移到前面；为负数时，将 list 集合的前 distance 个元素整体移到后面；
+
+###### 13.6.2 查找、替换操作
+* int binarySerach(List list, Object key): 二分搜索搜索指定的 List 集合；
+* Object max(Collection coll): 自然排序，返回集合中的最大元素；
+* Object max(Collection coll， Comparator comp): 定制排序，返回集合中的最大元素；
+* Object min(Coolection coll): 自然排序，返回集合中最小元素；
+* Object min(Coolection coll，Comparator comp): 定制排序，返回集合中最小元素；
+* void fill(List list, Object obj): 使用置顶元素 obj 替换指定 list 集合中的所有元素；
+* int frequency(Collection c, Object o): 返回指定集合中指定元素的出现次数；
+* int indexOfSubList(List source, List target): 返回子 List 对象在父 List 对象中最后一次出现的位置索引，如果父 List 中没有出现子 List，则返回 -1；
+* boolean replaceAll(List list, Object oldVal, Object newVal): 使用一个新值 newVal 替换 List 对象的所有旧值 oldVal；
+
+###### 13.6.3 同步控制
+
+Collections 类中提供了多个 synchronizedXxx() 方法将指定集合包装成线程同步的集合，从而解决多线程并发访问集合时的线程安全问题
+常用的集合实现类，如 HashSet、TreeSet、ArrayList、ArrayDeque、LinkedList、HashMap 和 TreeMap 都是线程不安全的，若有多个线程访问，而且有超过一个的线程试图修改它们，则存在线程安全地问题。
+
+```java
+public class CollectionsDemo {
+    public static void main(String[] args) {
+        Collection c = Collections.synchronizedCollection(new ArrayList<>());
+        List list = Collections.synchronizedList(new ArrayList<>());
+        Set s = Collections.synchronizedSet(new HashSet<>());
+        Map m = Collections.synchronizedMap(new HashMap<>());
+    }
+}
+```
+
+###### 13.6.4 设置不可变集合
+
+Collections 提供了三个方法来返回一个不可变的集合：
+
+* emptyXxx(): 返回一个空的、不可变的集合对象；此处的集合可以是 List、Set、Map;
+* singletonXxx(): 返回一个只包含指定对象的、不可变的集合对象；此处的集合可以是 List、Map;
+* unmodifiableXxx(): 返回指定集合对象的不可变试图，此处的集合可以是 List、Set、Map;
+
 #### 14. JVM垃圾回收机制；
 
 #### 15. LinkedHashMap 原理
