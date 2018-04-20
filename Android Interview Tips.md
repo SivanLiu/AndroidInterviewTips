@@ -176,8 +176,6 @@ View 事件分发机制从 dispatchTouchEvent() 开始
 LRU(Least Recently Used)核心思想是当缓存满时，会优先淘汰那些近期最少使用的缓存对象，有效的避免了 OOM 的出现。在Android 中采用 LRU 算法的常用缓存有两种：LruCache 和DisLruCache，分别用于实现内存缓存和硬盘缓存
 
 
-
-
 ### 5. 谈谈内存优化；
 
 ### 6. 安卓中方法数不能超过 64k 的原因，及如何处理；
@@ -224,10 +222,30 @@ DVM&ART
 Android的虚拟就DVM以及ART是对JVM做了一些优化，加载的是dex文件，对Class字节码做了一些优化，这个里面其实挺复杂的，我只知道一些基本的概念。
 
 ### 24. JNI
+
 基本上稍微大点的公司都会问到，不过我的回答始终如一：我只能看懂C的代码，项目中没有用过JNI，当然这个属于加分项，因为我当时的选择是把我用过熟悉的东西研究地滚瓜烂熟，而不是在自己平时很少接触到的东西上面搞个一知半解。
 
 ### 25. Binder
+
 Binder系列，各种AMS,WMS,PWS，常问到的有APP的启动流程，然后两个Activity相互跳转的时候的生命周期，Activity的生命周期。
+
+### 26. Bitmap 优化以及其三级缓存的大致思想与逻辑
+
+### 27. ListView如何优化，复用的原理，为什么会图片错位，如何解决，分页的思想是什么
+
+### 28. Android 子线程与主线程交互方式，原理以及各自的优缺点
+
+### 29. Android 多进程之间的通信的方式以及各自的使用场景
+
+### 30. 如何实现进程保活
+
+### 31. 说下冷启动与热启动是什么，区别，如何优化，使用场景等。
+
+### 32. OOM，ANR 的原因
+
+### 33. binder序列化与反序列化的过程，与使用过程
+
+### 34. 
 
 
 ## 二、Java 面试
@@ -857,12 +875,15 @@ public class ThreadPoolTest {
 ```
 
 #### 10. final，finally，finalize 的区别
+
 * final(修饰符): 修饰类、成员变量和成员方法，类不可被继承，成员变量不可变，成员方法不可重写
 * finally(异常处理):与 try...catch... 共同使用，确保无论是否出现异常都能被调用到
 * finalize(垃圾回收): 类的方法，垃圾回收之前会调用此方法，子类可以重写finalize() 方法实现对资源的回收
 
 #### 11. 谈谈序列化的方式，Serializable 和 Parcelable 的区别
+
 ##### 11.1 定义：
+
 序列化就是将对象转为字节序列的过程；任何数据都是以二进制的形式存贮到硬盘或是在网络上传送，而 Java 为了能将 Java 对象存贮到硬盘上或在网络上传送，把 Java 对象转换成字节流进行传输，这个转换过程就称之为Java序列化。Java 对象 --> 二进制字节流。
 
 ##### 11.2 意义
@@ -875,7 +896,7 @@ public class ThreadPoolTest {
 * 存储媒介：Serializable 使用 I/O 读写存储在硬盘上，而 Parcelable 是直接在内存中读写。很明显，内存的读写速度通常大于 IO 读写，所以在 Android 中传递数据优先选择 Parcelable。
 * 效率：Serializable 会使用反射，序列化和反序列化过程需要大量 I/O 操作，适用于将对象存储到文件或网络传输；Parcelable 自已实现封送和解封操作不需要用反射，数据也存放在 Native 内存中，效率要快很多。
 
-#### 12. 谈谈对 http 缓存的了解。
+#### 12. 谈谈对 http 缓存的了解
 
 #### 13. 谈谈 Java 集合，ArrayList、Vector、LinkedList的区别；
 
@@ -1816,6 +1837,7 @@ sivan enumMap {SUMMER=夏天, WINTER=冬天}
 * void rotate(List list, int distance)： 当 distance 为正数时，将 list 集合的后 distance 个元素整体移到前面；为负数时，将 list 集合的前 distance 个元素整体移到后面；
 
 ###### 13.6.2 查找、替换操作
+
 * int binarySerach(List list, Object key): 二分搜索搜索指定的 List 集合；
 * Object max(Collection coll): 自然排序，返回集合中的最大元素；
 * Object max(Collection coll， Comparator comp): 定制排序，返回集合中的最大元素；
@@ -1883,15 +1905,28 @@ LinkedHashMap 并未重写父类 HashMap 的 put 方法，而是重写了父类 
  void createEntry(int hash, K key, V value, int bucketIndex)
 ```
 
-
 ###### d. 读取
 
 LinkedHashMap 重写了父类 HashMap 的 get 方法，实际在调用父类 getEntry() 方法取得查找的元素后，再判断当排序模式 accessOrder 为 true 时，记录访问顺序，将最新访问的元素添加到双向链表的表头，并从原来的位置删除。由于的链表的增加、删除操作是常量级的，故并不会带来性能的损失。
+
+#### 16. 谈谈 Java 注解
+
+#### 17. 谈谈对 Java 反射的理解
+
+#### 18. 谈谈 Java 泛型的作用
+
+#### 19. java 虚拟机的理解，回收机制，JVM是如何回收对象的，有哪些方法等
 
 
 ## 三、算法
 ### 1. 电梯运行的算法分析；
 ### 2. 冒泡排序；
+
+## 四、设计模式
+
+### 1. 单例模式
+
+
 
 
 
