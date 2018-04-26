@@ -1891,7 +1891,7 @@ LinkedHashMap 采用的 hash 算法和 HashMap 相同，但是它重新定义了
 
 ###### b. 初始化：
 
-在 LinkedHashMap 的构造方法中，实际调用了父类 HashMap 的相关构造方法来构造一个底层存放的 table数组。
+在 LinkedHashMap 的构造方法中，实际调用了父类 HashMap 的相关构造方法来构造一个底层存放的 table 数组。
 
 LinkedHashMap 重写了 init() 方法，在调用父类的构造方法完成构造后，进一步实现了对其元素 Entry 的初始化操作。
 
@@ -1908,6 +1908,8 @@ LinkedHashMap 并未重写父类 HashMap 的 put 方法，而是重写了父类 
 ###### d. 读取
 
 LinkedHashMap 重写了父类 HashMap 的 get 方法，实际在调用父类 getEntry() 方法取得查找的元素后，再判断当排序模式 accessOrder 为 true 时，记录访问顺序，将最新访问的元素添加到双向链表的表头，并从原来的位置删除。由于的链表的增加、删除操作是常量级的，故并不会带来性能的损失。
+
+
 
 #### 16. 谈谈 Java 注解
 
