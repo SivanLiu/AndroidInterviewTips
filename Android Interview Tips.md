@@ -175,10 +175,96 @@ View 事件分发机制从 dispatchTouchEvent() 开始
 
 LRU(Least Recently Used)核心思想是当缓存满时，会优先淘汰那些近期最少使用的缓存对象，有效的避免了 OOM 的出现。在Android 中采用 LRU 算法的常用缓存有两种：LruCache 和DisLruCache，分别用于实现内存缓存和硬盘缓存
 
-
 ### 5. 谈谈内存优化；
 
 ### 6. 安卓中方法数不能超过 64k 的原因，及如何处理；
+
+#### 6.1 64k 原理：
+
+Android 应用 (APK) 文件包含 Dalvik Executable (DEX) 文件形式的可执行字节码文件，其中包含用来运行您的应用的已编译代码。Dalvik Executable 规范将可在单个 DEX 文件内可引用的方法总数限制在 65,536，其中包括 Android 框架方法、库方法以及您自己代码中的方法。在计算机科学领域内，术语千（简称 K）表示 1024（或 2^10）。由于 65,536 等于 64 X 1024，因此这一限制也称为“64K 引用限制”。
+
+#### 6.2 处理方法：
+
+##### 1）Android 5.0 之前版本的 Dalvik 可执行文件分包支持
+
+Android 5.0（API 级别 21）之前的平台版本使用 Dalvik 运行时来执行应用代码。默认情况下，Dalvik 限制应用的每个 APK 只能使用单个 classes.dex 字节码文件。要想绕过这一限制，您可以使用 Dalvik 可执行文件分包支持库，它会成为您的应用主要 DEX 文件的一部分，然后管理对其他 DEX 文件及其所包含代码的访问。
+
+##### 2）Android 5.0 及更高版本的 Dalvik 可执行文件分包支持
+
+Android 5.0（API 级别 21）及更高版本使用名为 ART 的运行时，后者原生支持从 APK 文件加载多个 DEX 文件。ART 在应用安装时执行预编译，扫描 classesN.dex 文件，并将它们编译成单个 .oat 文件，供 Android 设备执行。因此，如果您的 minSdkVersion 为 21 或更高值，则不需要 Dalvik 可执行文件分包支持库。
+
+##### 3） 规避 64K 限制
+
+* 检查您的应用的直接和传递依赖项 - 确保您在应用中使用任何庞大依赖库所带来的好处大于为应用添加大量代码所带来的弊端。一种常见的反面模式是，仅仅为了使用几个实用方法就在应用中加入非常庞大的库。减少您的应用代码依赖项往往能够帮助您规避 dex 引用限制。
+
+* 通过 ProGuard 移除未使用的代码 - 为您的版本构建启用代码压缩以运行 ProGuard。启用压缩可确保您交付的 APK 不含有未使用的代码。
+
+* minSdkVersion 设置为 21 或更高值，您只需在模块级 build.gradle 文件中将 multiDexEnabled 设置为 true
+
+```groovy
+android {
+    defaultConfig {
+        ...
+        minSdkVersion 21 
+        targetSdkVersion 26
+        multiDexEnabled true
+    }
+    ...
+}
+```
+
+* 如果您的 minSdkVersion 设置为 20 或更低值，则您必须按如下方式使用 Dalvik 可执行文件分包支持库：
+
+```groovy
+android {
+    defaultConfig {
+        ...
+        minSdkVersion 15 
+        targetSdkVersion 26
+        multiDexEnabled true
+    }
+    ...
+}
+
+dependencies {
+  compile 'com.android.support:multidex:1.0.1'
+}
+```
+
+* 根据是否要替换 Application 类，执行以下操作之一：
+
+如果您没有替换 Application 类，请编辑清单文件，按如下方式设置 <application> 标记中的 android:name：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.myapp">
+    <application
+            android:name="android.support.multidex.MultiDexApplication" >
+        ...
+    </application>
+</manifest>
+```
+
+如果您替换了 Application 类，请按如下方式对其进行更改以扩展 MultiDexApplication（如果可能）：
+
+```java
+public class MyApplication extends MultiDexApplication { ... }
+```
+
+或者，如果您替换了 Application 类，但无法更改基本类，则可以改为替换 attachBaseContext() 方法并调用 MultiDex.install(this) 来启用 Dalvik 可执行文件分包：
+
+```java
+public class MyApplication extends SomeOtherApplication {
+  @Override
+  protected void attachBaseContext(Context base) {
+     super.attachBaseContext(context);
+     Multidex.install(this);
+  }
+}
+```
+
+https://developer.android.com/studio/build/multidex?hl=zh-CN
 
 ### 7. 如何实现圆形 ImageView；
 
@@ -1879,7 +1965,12 @@ Collections 提供了三个方法来返回一个不可变的集合：
 LinkedHashMap 是 HashMap 的一个子类，它保留插入的顺序；LinkedHashMap 是 Map 接口的哈希表和链接列表实现，具有可预知的迭代顺序，此实现提供所有可选的映射操作，并允许使用 null 值和 null 键；LinkedHashMap 实现与 HashMap 的不同之处在于，后者维护着一个运行于所有条目的双重链接列表。此链接列表定义了迭代顺序，该迭代顺序可以是插入顺序或者是访问顺序。
 注意，此实现不是同步的。如果多个线程同时访问链接的哈希映射，而其中至少一个线程从结构上修改了该映射，则它必须保持外部同步。
 根据链表中元素的顺序可以分为：按插入顺序的链表，和按访问顺序(调用get方法)的链表；
-默认是按插入顺序排序，如果指定按访问顺序排序，那么调用 get 方法后，会将这次访问的元素移至链表尾部，不断访问可以形成按访问顺序排序的链表；可以重写 removeEldestEntry 方法返回 true 值指定插入元素时移除最老的元素。 
+默认是按插入顺序排序，如果指定按访问顺序排序，那么调用 get 方法后，会将这次访问的元素移至链表尾部，不断访问可以形成按访问顺序排序的链表；可以重写 removeEldestEntry 方法返回 true 值指定插入元素时移除最老的元素
+
+LinkedHashMap = HashMap(操作数据结构) + LinkedList(维护插入元素的先后顺序)
+
+
+
 
 ##### 15.1 LinkedHashMap 实现：
 
@@ -1925,7 +2016,7 @@ LinkedHashMap 重写了父类 HashMap 的 get 方法，实际在调用父类 get
 ### 2. 冒泡排序；
 
 ## 四、设计模式
-
+	GET /dkdtweb/?token=0c27f41e55f65452de18615d6e1fc3f8b611c23ab8bac40b666cddc15d679715 HTTP/1.1
 ### 1. 单例模式
 
 
