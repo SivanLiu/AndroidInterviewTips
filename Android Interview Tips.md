@@ -2084,6 +2084,39 @@ private long trailingZeros(long n) {
     }
 ```
 
+### 5. 计算数字k在0到n中的出现的次数，k可能是0~9的一个值。
+例如n=12，k=1，在 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]，我们发现1出现了5次 (1, 10, 11, 12)
+
+#### 5.1 最简单暴力的方法：
+循环一组数，将每个数分解成位（个、十、百位...），然后与目标数字进行对比统计
+
+```java
+public int digitCounts(int k, int n) {
+        int sum = 0;
+        int temp;
+        int m;
+
+        // 针对 0 需要特殊处理，多加一次
+        if(k == 0 ){
+            sum++;
+        }
+
+        for(int i = 0; i <= n ; i++){
+            temp = i;
+            //计算每个数是否包含 k
+            while(temp > 0){
+                m = temp % 10;
+                temp = temp / 10;
+                if(k == m){
+                    sum++;
+                }
+            }
+        }
+        return sum;
+    }
+```
+
+
 ## 四、设计模式
 	
 ### 1. 单例模式
