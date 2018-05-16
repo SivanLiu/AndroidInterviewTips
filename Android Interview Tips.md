@@ -2116,6 +2116,56 @@ public int digitCounts(int k, int n) {
     }
 ```
 
+### 6. 设计一个算法，找出只含素因子 2，3，5 的第 n 小的数。
+
+符合条件的数如：1, 2, 3, 4, 5, 6, 8, 9, 10, 12...
+
+丑数满足如下定义：
+
+$$ num = 2^i * 3^j * 5^k$$ 
+
+总结可以发现如下规律：
+
+* 把现有的最大丑数记作 M，来生成下一个丑数，该丑数肯定是前面某一个丑数乘以 2、3 或者 5 的结果；
+
+* 首先考虑把已有的每个丑数乘以 2。在乘以 2 的时候，能得到若干个结果小于或等于 M 的，由于是按照顺序生成的，小于或者等于 M 肯定已经在数组中了，我们不需再次考虑；还会得到若干个大于 M 的结果，但只需要第一个大于 M 的结果，因为丑数是按从小到大顺序生成的，其他更大的结果不用管，把得到的第一个乘以 2 后大于 M 的结果，记为 M2；
+
+* 同样我们把已有的每一个丑数乘以 3 和 5，能得到第一个大于 M 的结果 M3 和 M5，那么下一个丑数应该是 M2、M3 和 M5 三个数中的最小者。
+
+```java
+public int nthUglyNumber(int n) {
+        // write your code here
+        if(n <= 0){
+            return 0;
+        }
+        
+        ArrayList<Integer> list = new ArrayList<Integer>();
+        list.add(1);
+        
+        int i2 =0, i3 = 0, i5 = 0;
+        
+        while(list.size() < n){
+            int m2 = list.get(i2) * 2;
+            int m3 = list.get(i3) * 3;
+            int m5 = list.get(i5) * 5;
+            int min = Math.min(m2, Math.min(m3, m5));
+            list.add(min);
+            if(m2 == min){
+                i2++;
+            }
+            
+            if(m3 == min){
+                i3++;
+            }
+            
+            if(m5 == min){
+                i5++;
+            }
+        }
+        
+        return list.get(n-1);   
+    }
+```
 
 ## 四、设计模式
 	
