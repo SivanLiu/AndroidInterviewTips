@@ -331,8 +331,32 @@ Binder系列，各种AMS,WMS,PWS，常问到的有APP的启动流程，然后两
 
 ### 33. binder序列化与反序列化的过程，与使用过程
 
-### 34. 
+### 34. Android for work
 
+#### 34.1 特点：
+
+* 数据安全：工作数据通过work profile和个人数据隔离出来，并且受到work profile的保护, IT可以部署工作数据被保护的策略;
+* APP 安全：work profile 里面的 app 是通过 Google play for work 部署的，IT 可以阻止安装未知来源的app，并且可以配置app;
+* 设备安全：支持 afw 的设备受到磁盘加密、锁屏、远程 attestation services 的保护，如果 hardware-backed keystore 存在的话，也受到它的保护。
+
+#### 34.2 两种模式：
+
+* Device Owner: 在设备 Setupwizard 的过程中就把E MM App 设成管理设备的 app 就可以叫做 Device Owner 模式，这种模式可以简单的理解为 IT 具有完全控制设备的能力。
+
+* Work Profile(BYOD):在设备正常走完 setupwizard 流程以后，安装 EMM app 然后把它设成管理设备的 app 的模式叫做 Work Profile 模式。这种模式下有两种应用，一种是带有公文包图标的应用，这种应用由 IT 管理;
+
+#### 34.3 Afw 构成：
+
+* 设备管理 APIs: DevicePolicyManager+UserManager;
+* 企业移动管理 EMM/MDM Apps: 在 Work Profile 或者 Device Owner 模式下管理设备的 app. 作为 Device Owner 的 EMM App 比作为 Work Profile 的 EMM App 能调用更多的设备管理 Api;
+
+#### 34.4 Work profile 中的个人域如何与工作域内的应用通信：
+
+##### 1. 1 像素 Activity 便于在个人域、工作域中传递数据( intent )中传递方式：
+
+* 1）LauncherApps.startMainActivity(ComponentName component, UserHandle user, Rect sourceBounds, Bundle opts): 只能启动指定用户的 mainActivity，无法传递数据
+
+* 2）设置默认 Intent， 类似分享 intent ： 由于个人、工作域都会响应 action, 需要在发送 action 的时，禁用发送所在域的 TransmitIntentActivity， 待 action 发送后，启用禁用的 TransmitIntentActivity
 
 ## 二、Java 面试
 ### 1. Java 基础：
