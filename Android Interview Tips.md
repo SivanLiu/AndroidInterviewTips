@@ -2052,8 +2052,6 @@ LinkedHashMap 并未重写父类 HashMap 的 put 方法，而是重写了父类 
 
 LinkedHashMap 重写了父类 HashMap 的 get 方法，实际在调用父类 getEntry() 方法取得查找的元素后，再判断当排序模式 accessOrder 为 true 时，记录访问顺序，将最新访问的元素添加到双向链表的表头，并从原来的位置删除。由于的链表的增加、删除操作是常量级的，故并不会带来性能的损失。
 
-
-
 #### 16. 谈谈 Java 注解
 
 #### 17. 谈谈对 Java 反射的理解
@@ -2107,7 +2105,34 @@ LinkedHashMap 重写了父类 HashMap 的 get 方法，实际在调用父类 get
 * 造型运算符：cast
 
 
-#### 21.
+#### 21. Exception 和 Error 区别
+Exception 和 Error 都继承自 Throwable 类，在 Java 中只有 Throwable 类型的实例才可以被抛出或者捕获，它是异常处理机制的基本组成类型
+
+#### 21.1 概念：
+
+* Exception ： 程序正常运行中，可以预料的意外情况，可能并且应该被捕获，进行相应地处理；Exception 又可以分为可检查异常和不检查异常，可检查异常在源代码里面必须显式地进行捕获处理，不检查异常就是运行时异常，如 NullPointerException、ArrayIndexOutOfBoundsException 之类，通常是可以编码避免的逻辑错误，具体根据需要来判断是否需要捕获，并不会在编译器强制要求。
+
+* Error: 正常情况下，不大可能出现的情况，绝大部分的 Error 都会导致程序处于非正常的、不可恢复的状态，如 OutOfMemeoryError；
+
+#### 21.2 Throwable、Exception、Error 的设计和分类：
+
+![](异常/异常设计与分类.png)
+
+#### 21.3 异常处理的基本原则：
+
+* 尽量不要捕获类似 Exception 的通用异常，而且应该捕获特定异常；
+* 不要生吞异常(假设代码可能不会发生，或者感觉忽略异常无关紧要);
+* try-catch 代码段会产生额外的开销，建议仅仅捕获有必要的代码，尽量不要用一个大的 try 包住整段的代码；
+* Java 每实例化一个 Exception，都会对当时的栈进行快照，尽量减少不必要的实例化 Exception;
+* 勿在 try 代码块中调用 return、break 或 continue 语句，万一无法避免，一定要确保 finally 的存在不会改变函数的返回值;
+
+#### 21.4 NoClassDefFoundError 与 ClassNotFoundException 不同点：
+
+* NoClassDefFoundError 和 ClassNotFoundException 都是由于在 CLASSPATH 下找不到对应的类而引起的；当应用运行时没有找到对应的引用，则会抛出 java.lang.NoClassDefFoundError；当你在代码中显式加载类（使用Class.forName()）时没有找到对应的类，则会抛出java.lang.ClassNotFoundException；
+
+* NoClassDefFoundError 是 Error，是 unchecked，因此也不需要使用 try-catch 或者 finally 语句块包围；ClassNotFoundException 是受检异常（checked Exception），因此需要使用 try-catch 语句块或者 try-finally 语句块包围，否则会导致编译错误；
+
+* NoClassDefFoundError 是链接错误，发生在链接阶段，当解析引用的时候找不到对应的类，就会抛出java.lang.NoClassDefFoundError；ClassNotFoundException是异常，发生在运行阶段;
 
 ## 三、算法
 ### 1. 电梯运行的算法分析；
