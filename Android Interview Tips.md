@@ -2042,9 +2042,6 @@ LinkedHashMap 是 HashMap 的一个子类，它保留插入的顺序；LinkedHas
 
 LinkedHashMap = HashMap(操作数据结构) + LinkedList(维护插入元素的先后顺序)
 
-
-
-
 ##### 15.1 LinkedHashMap 实现：
 
 对于 LinkedHashMap 而言，它继承与 HashMap、底层使用哈希表与双向链表来保存所有元素。其基本操作与父类 HashMap 相似，它通过重写父类相关的方法，来实现自己的链接列表特性。
@@ -2125,8 +2122,8 @@ LinkedHashMap 重写了父类 HashMap 的 get 方法，实际在调用父类 get
 * 字串运算符：+
 * 造型运算符：cast
 
-
 #### 21. Exception 和 Error 区别
+
 Exception 和 Error 都继承自 Throwable 类，在 Java 中只有 Throwable 类型的实例才可以被抛出或者捕获，它是异常处理机制的基本组成类型
 
 #### 21.1 概念：
@@ -2154,6 +2151,36 @@ Exception 和 Error 都继承自 Throwable 类，在 Java 中只有 Throwable �
 * NoClassDefFoundError 是 Error，是 unchecked，因此也不需要使用 try-catch 或者 finally 语句块包围；ClassNotFoundException 是受检异常（checked Exception），因此需要使用 try-catch 语句块或者 try-finally 语句块包围，否则会导致编译错误；
 
 * NoClassDefFoundError 是链接错误，发生在链接阶段，当解析引用的时候找不到对应的类，就会抛出java.lang.NoClassDefFoundError；ClassNotFoundException是异常，发生在运行阶段;
+
+#### 22. 强引用、软引用、弱引用、幻象引用
+
+##### 22.1 概念：
+
+* 强引用：普通对象引用，只要强引用指向一个对象，表明对象还活着，垃圾收集器不会回收；
+* 软引用：当 JVM 认为内存不足时，才会试图回收软引用指向的对象；JVM 确保在抛出 OutOfMemoryError 之前，清理软引用指向的对象；软引用通常用来实现内存敏感的缓存，如果还有空闲内存，就可以暂时保留缓存，当内存不足时清理掉，不会好近内存；
+* 弱引用：提供一种访问在弱引用状态下对象的途径，构建一种没有特定约束的关系，如维护一种非强制性的映射关系，如果试图获取的对象还在，就使用它，否则重新实例化，很多缓存实现的选择；
+* 幻象引用（虚引用）：仅仅提供了一种确保对象被 finalize 以后，做某些事情的机制，如 post-mortem 清理机制，cleaner 机制等；
+
+##### 22.2 对象可达性状态流转分析
+
+###### 1）Java 定义的不同可达性级别，具体如下：
+
+![](引用/可达性状态流转.png)
+
+* 强可达(strongly reachable)：当一个对象可以有一个或多个线程可以不通过各种引用访问到的情况，如新建一个对象，那么创建它的线程对它就是强可达；
+* 软可达(softly reachable)：当我们只能通过软引用才能访问到对象的状态；
+* 弱可达(weakly reachable)：无法通过强引用或者软引用，只能通过弱引用访问时的状态；临近 finalize 状态的时机，当弱引用被清除的时候，就符合 finalize 的条件了；
+* 幻象可达(phantom reachable)：没有强、软、弱引用关联，并且 finalize 过了，只有幻象引用指向这个对象的时候；
+* 不可达(reachable)：对象可以被清除的状态；
+
+###### 2）引用队列(ReferenceQueue)使用：
+
+创建各种引用并关联到响应对象时，可以选择是否需要关联引用队列，JVM 会在特定时机将引用插入到队列里，我们可以从队列里获取引用进行相关后续逻辑；尤其是幻象引用，get 方法只返回 null，如果再不指定引用队列，基本就没有意义了。
+
+###### 3）显式地影响软引用垃圾收集：
+
+软引用通常会在最后一次引用后，还能保持一段时间，默认值是根据堆剩余空间计算的(以 M bytes 为单位)；
+
 
 ## 三、算法
 ### 1. 电梯运行的算法分析；
